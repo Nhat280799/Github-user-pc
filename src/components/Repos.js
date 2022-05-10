@@ -1,26 +1,48 @@
+import { items } from 'fusioncharts';
 import React from 'react';
 import styled from 'styled-components';
 import { GithubContext } from '../context/context';
 import { ExampleChart, Pie3D, Column3D, Bar3D, Doughnut2D } from './Charts';
 const Repos = () => {
-  const {repos} = React.useContext(GithubContext);
-  console.log(repos);
-  let languages = repos.reduce((total,item) => {
-      const {language} = item;
-      if(!language){
-          return total;
-      }
-      if(!total[language]){
-        total[language] = {label : language , value : 1 };
-      }else{
-        total[language] = {...total[language] , value: total[language].value + 1,};
-      }
+  const { repos } = React.useContext(GithubContext);
+  let languages = repos.reduce((total, item) => {
+    const { language, stargazers_count } = item;
+    if (!language) {
       return total;
-  },{});
+    }
+    if (!total[language]) {
+      total[language] = { label: language, value: 1, start: stargazers_count };
+    } else {
+      total[language] = {
+        ...total[language],
+        value: total[language].value + 1,
+        start: total[language].start + stargazers_count
+      };
+    }
+    return total;
+  }, {});
 
-    languages = Object.values(languages).sort((a,b) => {
-      return b.value - a.value;
-    }).slice(0,5);
+  const mostUsed = Object.values(languages).sort((a, b) => {
+    return b.value - a.value;
+  }).slice(0, 5);
+
+  const mostPopular = Object.values(languages).sort((a, b) => {
+    return b.start - a.start;
+  }).map((item) => {
+    return { ...items, value: item.start }
+  }).slice(0, 5);
+
+  let {stars,forks} = repos.reduce((total,item) => {
+    const {stargazers_count,name,forks} = item;
+    total.stars[stargazers_count] = {label:name , value : stargazers_count};
+    total.forks[forks] = {label:name,label:forks}
+    return total;
+  } , {
+    stars: {}, forks:{}
+  })
+
+  stars = Object.values(stars).slice(-5).reverse();
+  forks = Object.values(forks).slice(-5).reverse();
 
   const chartData = [
     {
@@ -39,9 +61,10 @@ const Repos = () => {
   return (
     <section className="section">
       <Wrapper className="section-center">
-      <Pie3D data={languages} />
-      <div></div>
-      <Doughnut2D data={chartData} />
+        <Pie3D data={mostUsed} />
+        <Column3D data={stars} />
+        <Doughnut2D data={mostPopular} />
+        <Bar3D data={chartData} />
       </Wrapper>
     </section>);
 };
