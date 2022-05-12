@@ -8,33 +8,56 @@ const rootUrl = 'https://api.github.com';
 
 const GithubContext = React.createContext();
 
-const GithubProvider = ({children}) => {
-    const [githubUser,setGithubUser] = useState(mockUser);
-    const [repos,setRepos] = useState(mockRepos);
-    const [followers,setFollowers] = useState(mockFollowers);
-    //request loading
-    const [requests, setRequests] = useState(0);
-    const [loading,setIsLoading] = useState(false);
-    //check rate 
-    const checkRequests = () => {
-        axios(`${rootUrl}/rate_limit`)
-        .then((response) => response.json())
-            .then(({data}) => {
-                let {rate: {remaining}} = data;
-                // remaining = 0;
-                setRequests(remaining);
+// Provider, Consumer - GithubContext.Provider
 
-                if (remaining === 0) {
-                    
-                }
-            })
-            .catch(err => console.log(err))
-    }
+const GithubProvider = ({ children }) => {
+  const [githubUser, setGithubUser] = useState(mockUser);
+  const [repos, setRepos] = useState(mockRepos);
+  const [followers, setFollowers] = useState(mockFollowers);
+  // request loading
+  const [requests, setRequests] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  // error
+  const [error, setError] = useState({ show: false, msg: '' });
 
-    //  error
-    useEffect(checkRequests, [])
-    return <GithubContext.Provider
-    value={{githubUser,repos,followers,requests,}}>{children}</GithubContext.Provider>
+
+  //  check rate
+  const checkRequests = () => {
+    axios(`${rootUrl}/rate_limit`)
+      .then(({ data }) => {
+        let {
+          rate: { remaining },
+        } = data;
+        remaining = 0 ;
+        setRequests(remaining);
+        if (remaining === 0) {
+          toggleError(true,"sory không tồn tại")
+        }
+      })
+      .catch((err) => console.log(err));
+  };
+
+  function toggleError(show,msg){
+    setError({show,msg});
+  }
+
+  // error
+  useEffect(checkRequests, []);
+  // get initial user 
+  return (
+    <GithubContext.Provider
+      value={{
+        githubUser,
+        repos,
+        followers,
+        requests,
+        error,
+        isLoading,
+      }}
+    >
+      {children}
+    </GithubContext.Provider>
+  );
 };
 
-export {GithubProvider,GithubContext};
+export { GithubProvider, GithubContext };

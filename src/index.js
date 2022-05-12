@@ -12,9 +12,7 @@ import {
 } from "react-router-dom";
 ReactDOM.render(
   <React.StrictMode>
-  <BrowserRouter>
   <GithubProvider> <App /></GithubProvider>
-  </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')
 );
